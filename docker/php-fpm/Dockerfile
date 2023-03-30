@@ -1,9 +1,5 @@
 FROM php:8.2-fpm
 
-COPY wait-for-it.sh /usr/bin/wait-for-it
-
-RUN chmod +x /usr/bin/wait-for-it
-
 RUN apt-get update && \
     apt-get install -y --no-install-recommends libssl-dev zlib1g-dev curl git unzip netcat libxml2-dev libpq-dev libzip-dev && \
     pecl install apcu && \
@@ -15,7 +11,3 @@ RUN apt-get update && \
 COPY --from=composer /usr/bin/composer /usr/bin/composer
 
 WORKDIR /var/www
-
-CMD composer i -o; wait-for-it db:5432 -- bin/console doctrine:migrations:migrate; php-fpm
-
-EXPOSE 9000

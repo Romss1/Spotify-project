@@ -3,39 +3,62 @@ version: '3.8'
 services:
   db:
     container_name: db_spotify
-    image: postgres:latest
+    image: postgres:alpine3.17
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
     restart: always
     environment:
       POSTGRES_PASSWORD: spotify
       POSTGRES_DB: spotify
     ports:
-      - 15432:5432
+      - "5432:5432"
+    networks:
+      - dev
+      - web-proxy
 
   php-fpm:
     container_name: php_spotify
     build:
       context: ./php-fpm
+    user: "${UID}:${GID}"
     depends_on:
       - db
-    environment:
-      - APP_ENV=${APP_ENV}
-      - APP_SECRET=${APP_SECRET}
-      - DATABASE_URL=${DATABASE_URL}
     volumes:
-      - ./../project/:/var/www
+      - ./../app/:/var/www
+    env_file:
+      - .env
+    networks:
+      - dev
+      - web-proxy
+
 
   nginx:
     container_name: nginx_spotify
-    build:
-      context: ./nginx
+    image: nginx:alpine3.17
     volumes:
-      - ./../project/:/var/www
+      - ./../app/:/var/www
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf
       - ./nginx/sites/:/etc/nginx/sites-available
       - ./nginx/conf.d/:/etc/nginx/conf.d
       - ./logs:/var/log
     depends_on:
       - php-fpm
+    command:
+      - nginx
     ports:
-      - "80:80"
+      - "8080:80"
       - "443:443"
+    networks:
+      web-proxy:
+
+networks:
+  dev:
+  web-proxy:
+
+volumes:
+  db-data:

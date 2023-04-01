@@ -1,0 +1,34 @@
+name: Code Quality
+on: [ push, pull_request ]
+jobs:
+  code-quality:
+    name: PHPStan & PHP-CS-Fixer
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        php: [ '8.2' ]
+      fail-fast: false
+    steps:
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+
+      - uses: actions/checkout@v2
+
+      - name: Composer Install
+        working-directory: ./app
+        run: composer install --ansi --prefer-dist --no-interaction --no-progress
+
+#      TODO add when first test will be written
+#      - name: PHP-UNIT
+#        working-directory: ./app
+#        run: vendor/bin/phpunit tests
+
+      - name: PHP-STAN
+        working-directory: ./app
+        run: vendor/bin/phpstan analyse -l 9 src
+
+      - name: PHP-CS-Fixer
+        working-directory: ./app
+        run: vendor/bin/php-cs-fixer fix --diff --dry-run --stop-on-violation

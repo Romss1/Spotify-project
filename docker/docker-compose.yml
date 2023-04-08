@@ -11,15 +11,13 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
-    restart: always
     environment:
       POSTGRES_PASSWORD: spotify
       POSTGRES_DB: spotify
     ports:
       - "5432:5432"
     networks:
-      - dev
-      - web-proxy
+      - database
 
   php-fpm:
     container_name: php_spotify
@@ -33,9 +31,10 @@ services:
     env_file:
       - .env
     networks:
-      - dev
-      - web-proxy
-
+      - database
+      - web
+    ports:
+      - "9000"
 
   nginx:
     container_name: nginx_spotify
@@ -54,11 +53,11 @@ services:
       - "8080:80"
       - "443:443"
     networks:
-      web-proxy:
+      - web
 
 networks:
-  dev:
-  web-proxy:
+  database:
+  web:
 
 volumes:
   db-data:

@@ -22,19 +22,19 @@ bash:
 	@${exec}
 
 phpstan:
-	@${exec} vendor/bin/phpstan analyse -l 9 src
+	@${exec} -c "vendor/bin/phpstan analyse -l 9 src"
 .PHONY: phpstan
 
 cs-fix:
-	@${exec} vendor/bin/php-cs-fixer fix
+	@${exec} -c "vendor/bin/php-cs-fixer fix"
 .PHONY: cs-fix
 
 cs-show:
-	@${exec} vendor/bin/php-cs-fixer fix --diff --dry-run
+	@${exec} -c "vendor/bin/php-cs-fixer fix --diff --dry-run"
 .PHONY: cs-show
 
 phpunit:
-	@${exec} vendor/bin/phpunit tests
+	@${exec} -c "vendor/bin/phpunit tests"
 .PHONY: phpunit
 #-----------------------------------------------------------------------------------------------------------------------
 # Variables

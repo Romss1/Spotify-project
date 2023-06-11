@@ -11,7 +11,7 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
-    restart: always
+    restart: "no"
     environment:
       POSTGRES_PASSWORD: spotify
       POSTGRES_DB: spotify

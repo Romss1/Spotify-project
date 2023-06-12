@@ -13,8 +13,8 @@ services:
       retries: 5
     restart: "no"
     environment:
-      POSTGRES_PASSWORD: spotify
-      POSTGRES_DB: spotify
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
     ports:
       - "5432:5432"
     networks:
@@ -25,13 +25,12 @@ services:
     container_name: php_spotify
     build:
       context: ./php-fpm
-    user: "${UID}:${GID}"
     depends_on:
       - db
     volumes:
       - ./../app/:/var/www
     env_file:
-      - .env
+      - ../app/.env
     networks:
       - dev
       - web-proxy

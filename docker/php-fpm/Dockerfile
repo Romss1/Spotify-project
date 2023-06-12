@@ -1,5 +1,9 @@
 FROM php:8.2-fpm
 
+ARG APP_USER=romain
+
+RUN adduser -D ${APP_USER}
+
 RUN apt-get update && \
     apt-get install -y --no-install-recommends libssl-dev zlib1g-dev curl git unzip netcat libxml2-dev libpq-dev libzip-dev && \
     pecl install apcu && \
@@ -8,6 +12,7 @@ RUN apt-get update && \
     docker-php-ext-enable apcu pdo_pgsql sodium && \
     apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
-COPY --from=composer /usr/bin/composer /usr/bin/composer
+USER ${APP_USER}:${APP_USER}
+COPY --chown=${APP_USER} --from=composer /usr/bin/composer /usr/bin/composer
 
 WORKDIR /var/www

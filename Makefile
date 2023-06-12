@@ -36,9 +36,13 @@ cs-show:
 phpunit:
 	@${exec} -c "vendor/bin/phpunit tests"
 .PHONY: phpunit
+
+test-coverage:
+	$(exec) -c  "XDEBUG_MODE=coverage vendor/bin/phpunit --coverage-text"
+.PHONY: test-coverage
 #-----------------------------------------------------------------------------------------------------------------------
 # Variables
 #-----------------------------------------------------------------------------------------------------------------------
 
-compose = docker-compose -f ./docker/docker-compose.yml
+compose = docker-compose --env-file ./app/.env -f ./docker/docker-compose.yml
 exec = docker exec -it php_spotify bash

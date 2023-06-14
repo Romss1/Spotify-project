@@ -14,6 +14,8 @@ RUN apt-get update && \
     docker-php-ext-enable apcu pdo_pgsql sodium xdebug && \
     apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
+COPY xdebug.ini "${PHP_INI_DIR}/conf.d"
+
 USER ${APP_USER}:${APP_USER}
 COPY --chown=${APP_USER} --from=composer /usr/bin/composer /usr/bin/composer
 

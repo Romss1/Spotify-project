@@ -38,7 +38,7 @@ phpunit:
 .PHONY: phpunit
 
 test-coverage:
-	$(exec) -c  "XDEBUG_MODE=coverage vendor/bin/phpunit --coverage-text"
+	$(exec) -c  "XDEBUG_MODE=coverage vendor/bin/phpunit --coverage-html var/coverage"
 .PHONY: test-coverage
 #-----------------------------------------------------------------------------------------------------------------------
 # Variables

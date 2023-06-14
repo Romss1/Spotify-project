@@ -27,6 +27,8 @@ services:
       context: ./php-fpm
     depends_on:
       - db
+    extra_hosts:
+        - host.docker.internal:host-gateway
     volumes:
       - ./../app/:/var/www
     env_file:

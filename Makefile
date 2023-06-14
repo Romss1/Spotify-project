@@ -4,7 +4,7 @@
 
 install:
 	@echo "Starting install"
-	@${compose} up -d
+	@${compose} up --build -d
 	@${exec} -c "composer install;"
 .PHONY: install
 
@@ -46,3 +46,4 @@ test-coverage:
 
 compose = docker-compose --env-file ./app/.env -f ./docker/docker-compose.yml
 exec = docker exec -it php_spotify bash
+build = ./docker/docker-compose up

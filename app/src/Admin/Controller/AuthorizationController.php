@@ -15,7 +15,6 @@ class AuthorizationController extends AbstractController
     public function __invoke(Request $request, SpotifyClient $client): Response
     {
         $form = $this->createForm(UserType::class);
-
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid() && is_string($client->getUserAuthorizationUrl())) {

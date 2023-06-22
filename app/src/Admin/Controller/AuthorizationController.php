@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Admin\Controller;
+namespace Admin\Controller;
 
 use App\Admin\Form\UserType;
 use App\Common\Client\SpotifyClient;

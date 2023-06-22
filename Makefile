@@ -40,6 +40,10 @@ phpunit:
 test-coverage:
 	$(exec) -c  "XDEBUG_MODE=coverage vendor/bin/phpunit --coverage-html var/coverage"
 .PHONY: test-coverage
+
+spotify:
+	$(exec) -c "php bin/console get-spotify-plays"
+.PHONY: spotify
 #-----------------------------------------------------------------------------------------------------------------------
 # Variables
 #-----------------------------------------------------------------------------------------------------------------------

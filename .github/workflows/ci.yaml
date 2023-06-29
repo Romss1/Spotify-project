@@ -27,7 +27,7 @@ jobs:
 
       - name: PHP-STAN
         working-directory: ./app
-        run: vendor/bin/phpstan analyse -l 9 src
+        run: vendor/bin/phpstan analyse -l 9 src tests
 
       - name: PHP-CS-Fixer
         working-directory: ./app

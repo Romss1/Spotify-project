@@ -3,10 +3,12 @@
 namespace App\Worker\Command;
 
 use App\Common\Client\SpotifyClient;
+use App\Common\Entity\User;
 use App\Common\Repository\UserRepository;
 use App\Worker\DTO\TrackDto;
 use App\Worker\Entity\Track;
 use App\Worker\Repository\TrackRepository;
+use Predis\ClientInterface;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
@@ -19,17 +21,27 @@ class GetSpotifyPlays extends Command
     private UserRepository $userRepository;
     private TrackRepository $trackRepository;
 
-    public function __construct(SpotifyClient $spotifyClient, UserRepository $userRepository, TrackRepository $trackRepository)
+    private ClientInterface $redis;
+
+    public function __construct(SpotifyClient $spotifyClient, UserRepository $userRepository, TrackRepository $trackRepository, ClientInterface $redis)
     {
         parent::__construct();
         $this->spotifyClient = $spotifyClient;
         $this->userRepository = $userRepository;
         $this->trackRepository = $trackRepository;
+        $this->redis = $redis;
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        $users = $this->userRepository->findAll();
+        $users = $this->redis->get('all-users');
+        if (!$users) {
+            $users = $this->userRepository->findAll();
+            $this->redis->set('all-users', serialize($users));
+        } else {
+            /** @var User[] $users */
+            $users = unserialize($users);
+        }
 
         foreach ($users as $user) {
             $token = $user->getToken();
@@ -47,7 +59,7 @@ class GetSpotifyPlays extends Command
             foreach ($response->toArray()['items'] as $item) {
                 $trackDto = new TrackDto();
                 $trackDto->fromArray($item);
-                if ($user->getLastCallToSpotifyApi() >= $trackDto->getPlayedAt()) {
+                if ($user->getLastCallToSpotifyApi()->getTimestamp() >= $trackDto->getPlayedAt()->getTimestamp()) {
                     return Command::SUCCESS;
                 }
                 $track = new Track();

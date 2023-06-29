@@ -30,3 +30,8 @@ services:
             $clientId: '%env(CLIENT_ID)%'
             $clientSecret: '%env(CLIENT_SECRET)%'
             $redirectUri: '%env(REDIRECT_URI)%'
+
+    Predis\ClientInterface: '@Predis\Client'
+    Predis\Client:
+        arguments:
+            - '%env(REDIS_URL)%'

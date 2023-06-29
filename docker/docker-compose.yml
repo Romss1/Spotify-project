@@ -57,6 +57,15 @@ services:
     networks:
       web-proxy:
 
+  redis:
+    container_name: redis_spotify
+    image: redis:alpine3.17
+    ports:
+      - "6379:6379"
+    networks:
+      - dev
+      - web-proxy
+
 networks:
   dev:
   web-proxy:

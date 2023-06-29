@@ -41,6 +41,10 @@ test-filter:
 	@${exec} -c "vendor/bin/phpunit --filter $(method) $(path)"
 .PHONY: test-filter
 
+test-path:
+	@${exec} -c "vendor/bin/phpunit $(path)"
+.PHONY: test-path
+
 test-coverage:
 	$(exec) -c  "XDEBUG_MODE=coverage vendor/bin/phpunit --coverage-html var/coverage"
 .PHONY: test-coverage

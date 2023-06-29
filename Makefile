@@ -4,7 +4,7 @@
 
 install:
 	@echo "Starting install"
-	@${compose} up -d
+	@${compose} up --build -d
 	@${exec} -c "composer install;"
 .PHONY: install
 
@@ -22,23 +22,48 @@ bash:
 	@${exec}
 
 phpstan:
-	@${exec} vendor/bin/phpstan analyse -l 9 src
+	@${exec} -c "vendor/bin/phpstan analyse -l 9 src tests"
 .PHONY: phpstan
 
 cs-fix:
-	@${exec} vendor/bin/php-cs-fixer fix
+	@${exec} -c "vendor/bin/php-cs-fixer fix"
 .PHONY: cs-fix
 
 cs-show:
-	@${exec} vendor/bin/php-cs-fixer fix --diff --dry-run
+	@${exec} -c "vendor/bin/php-cs-fixer fix --diff --dry-run"
 .PHONY: cs-show
 
-phpunit:
-	@${exec} vendor/bin/phpunit tests
-.PHONY: phpunit
+tests:
+	@${exec} -c "vendor/bin/phpunit"
+.PHONY: tests
+
+test-filter:
+	@${exec} -c "vendor/bin/phpunit --filter $(method) $(path)"
+.PHONY: test-filter
+
+test-coverage:
+	$(exec) -c  "XDEBUG_MODE=coverage vendor/bin/phpunit --coverage-html var/coverage"
+.PHONY: test-coverage
+
+spotify:
+	$(exec) -c "php bin/console get-spotify-plays"
+.PHONY: spotify
+
+cache:
+	$(exec) -c "php bin/console cache:clear"
+.PHONY: cache
+
+migration:
+	$(exec) -c "php bin/console make:migration"
+.PHONY: migration
+
+migrate:
+	$(exec) -c "php bin/console doctrine:migrations:migrate"
+.PHONY: migrate
 #-----------------------------------------------------------------------------------------------------------------------
 # Variables
 #-----------------------------------------------------------------------------------------------------------------------
 
-compose = docker-compose -f ./docker/docker-compose.yml
+compose = docker-compose --env-file ./app/.env -f ./docker/docker-compose.yml
 exec = docker exec -it php_spotify bash
+build = ./docker/docker-compose up

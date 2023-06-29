@@ -20,11 +20,6 @@ jobs:
         working-directory: ./app
         run: composer install --ansi --prefer-dist --no-interaction --no-progress
 
-#      TODO add when first test will be written
-#      - name: PHP-UNIT
-#        working-directory: ./app
-#        run: vendor/bin/phpunit tests
-
       - name: PHP-STAN
         working-directory: ./app
         run: vendor/bin/phpstan analyse -l 9 src tests
@@ -32,3 +27,8 @@ jobs:
       - name: PHP-CS-Fixer
         working-directory: ./app
         run: vendor/bin/php-cs-fixer fix --diff --dry-run --stop-on-violation
+
+#      TODO add when first test will be written
+#      - name: PHP-UNIT
+#        working-directory: ./app
+#        run: vendor/bin/phpunit tests

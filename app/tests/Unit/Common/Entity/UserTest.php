@@ -1,31 +1,34 @@
 <?php
 
-namespace App\Tests\Admin\Entity;
+namespace App\Tests\Unit\Common\Entity;
 
-use App\Admin\Entity\User;
+use App\Common\Entity\User;
 use PHPUnit\Framework\TestCase;
 
 class UserTest extends TestCase
 {
-    public function testGettersAndSetters()
+    public function testGettersAndSetters(): void
     {
         $user = new User();
 
         $token = 'example_token';
         $refreshToken = 'example_refresh_token';
         $scope = 'example_scope';
+        $lastCallToSpotifyApi = new \DateTime('2000-01-01');
 
         $user->setToken($token);
         $user->setRefreshToken($refreshToken);
         $user->setScope($scope);
+        $user->setLastCallToSpotifyApi($lastCallToSpotifyApi);
 
         $this->assertNull($user->getId());
         $this->assertEquals($token, $user->getToken());
         $this->assertEquals($refreshToken, $user->getRefreshToken());
         $this->assertEquals($scope, $user->getScope());
+        $this->assertEquals($lastCallToSpotifyApi, $user->getLastCallToSpotifyApi());
     }
 
-    public function testPropertyLengths()
+    public function testPropertyLengths(): void
     {
         $user = new User();
 

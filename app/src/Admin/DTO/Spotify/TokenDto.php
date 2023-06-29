@@ -1,8 +1,8 @@
 <?php
 
-namespace App\Admin\Entity\DTO\Spotify;
+namespace App\Admin\DTO\Spotify;
 
-class Token
+class TokenDto
 {
     private string $accessToken;
     private string $type;

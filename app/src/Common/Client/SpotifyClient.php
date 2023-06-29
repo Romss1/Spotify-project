@@ -33,6 +33,20 @@ class SpotifyClient
         ]);
     }
 
+    public function getTokenFromRefreshToken(string $refreshToken): ResponseInterface
+    {
+        return $this->client->request('POST', 'https://accounts.spotify.com/api/token', [
+            'headers' => [
+                'Content-Type' => 'application/x-www-form-urlencoded',
+                'Authorization' => 'Basic '.\base64_encode($this->clientId.':'.$this->clientSecret),
+            ],
+            'body' => [
+                'grant_type' => 'refresh_token',
+                'refresh_token' => $refreshToken,
+            ],
+        ]);
+    }
+
     public function getUserAuthorizationUrl(): ?string
     {
         $params = [
@@ -55,10 +69,7 @@ class SpotifyClient
         return null;
     }
 
-    /**
-     * @return array <mixed>
-     */
-    public function getRecentlyPlayedTracks(string $token): array
+    public function getRecentlyPlayedTracks(string $token): ResponseInterface
     {
         $response = $this->client->request('GET', 'https://api.spotify.com/v1/me/player/recently-played', [
             'auth_bearer' => $token,
@@ -67,6 +78,6 @@ class SpotifyClient
                 ],
         ]);
 
-        return $response->toArray();
+        return $response;
     }
 }

@@ -26,12 +26,18 @@ doctrine:
                 dir: '%kernel.project_dir%/src/Entity'
                 prefix: 'App\Entity'
                 alias: App
-            Admin:
+            Common:
                 is_bundle: false
                 type: attribute
-                dir: '%kernel.project_dir%/src/Admin/Entity'
-                prefix: 'App\Admin\Entity'
-                alias: Admin
+                dir: '%kernel.project_dir%/src/Common/Entity'
+                prefix: 'App\Common\Entity'
+                alias: Common
+            Worker:
+                is_bundle: false
+                type: attribute
+                dir: '%kernel.project_dir%/src/Worker/Entity'
+                prefix: 'App\Worker\Entity'
+                alias: Worker
 
 when@test:
     doctrine:

@@ -1,8 +1,8 @@
 <?php
 
-namespace Admin\Entity;
+namespace App\Common\Entity;
 
-use Admin\Repository\UserRepository;
+use App\Common\Repository\UserRepository;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: UserRepository::class)]
@@ -22,6 +22,9 @@ class User
 
     #[ORM\Column(length: 255)]
     private ?string $scope = null;
+
+    #[ORM\Column(type: 'datetime', nullable: true)]
+    private \DateTime $lastCallToSpotifyApi;
 
     public function getId(): ?int
     {
@@ -62,5 +65,15 @@ class User
         $this->scope = $scope;
 
         return $this;
+    }
+
+    public function getLastCallToSpotifyApi(): \DateTime
+    {
+        return $this->lastCallToSpotifyApi;
+    }
+
+    public function setLastCallToSpotifyApi(\DateTime $lastCallToSpotifyApi): void
+    {
+        $this->lastCallToSpotifyApi = $lastCallToSpotifyApi;
     }
 }

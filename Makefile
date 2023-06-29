@@ -22,7 +22,7 @@ bash:
 	@${exec}
 
 phpstan:
-	@${exec} -c "vendor/bin/phpstan analyse -l 9 src"
+	@${exec} -c "vendor/bin/phpstan analyse -l 9 src tests"
 .PHONY: phpstan
 
 cs-fix:
@@ -33,9 +33,13 @@ cs-show:
 	@${exec} -c "vendor/bin/php-cs-fixer fix --diff --dry-run"
 .PHONY: cs-show
 
-phpunit:
-	@${exec} -c "vendor/bin/phpunit tests"
-.PHONY: phpunit
+tests:
+	@${exec} -c "vendor/bin/phpunit"
+.PHONY: tests
+
+test-filter:
+	@${exec} -c "vendor/bin/phpunit --filter $(method) $(path)"
+.PHONY: test-filter
 
 test-coverage:
 	$(exec) -c  "XDEBUG_MODE=coverage vendor/bin/phpunit --coverage-html var/coverage"
@@ -44,6 +48,18 @@ test-coverage:
 spotify:
 	$(exec) -c "php bin/console get-spotify-plays"
 .PHONY: spotify
+
+cache:
+	$(exec) -c "php bin/console cache:clear"
+.PHONY: cache
+
+migration:
+	$(exec) -c "php bin/console make:migration"
+.PHONY: migration
+
+migrate:
+	$(exec) -c "php bin/console doctrine:migrations:migrate"
+.PHONY: migrate
 #-----------------------------------------------------------------------------------------------------------------------
 # Variables
 #-----------------------------------------------------------------------------------------------------------------------

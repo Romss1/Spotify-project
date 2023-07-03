@@ -43,6 +43,7 @@ class UserController extends AbstractController
         $user->setToken($token->getAccessToken());
         $user->setRefreshToken($token->getRefreshToken());
         $user->setScope($token->getScope());
+        $user->setLastCallToSpotifyApi(new \DateTime('2000-01-01'));
 
         $em->persist($user);
         $em->flush();

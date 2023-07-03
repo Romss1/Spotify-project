@@ -8,7 +8,7 @@ use App\Common\Repository\UserRepository;
 use App\Worker\DTO\TrackDto;
 use App\Worker\Entity\Track;
 use App\Worker\Repository\TrackRepository;
-use Predis\ClientInterface;
+use Symfony\Component\Cache\Adapter\RedisAdapter;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
@@ -21,26 +21,26 @@ class GetSpotifyPlays extends Command
     private UserRepository $userRepository;
     private TrackRepository $trackRepository;
 
-    private ClientInterface $redis;
-
-    public function __construct(SpotifyClient $spotifyClient, UserRepository $userRepository, TrackRepository $trackRepository, ClientInterface $redis)
+    public function __construct(SpotifyClient $spotifyClient, UserRepository $userRepository, TrackRepository $trackRepository)
     {
         parent::__construct();
         $this->spotifyClient = $spotifyClient;
         $this->userRepository = $userRepository;
         $this->trackRepository = $trackRepository;
-        $this->redis = $redis;
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        $users = $this->redis->get('all-users');
-        if (!$users) {
+        $redisClient = RedisAdapter::createConnection('redis://redis');
+        $cacheAdapter = new RedisAdapter($redisClient);
+        $cachePool = $cacheAdapter->getItem('users');
+        if (!$cachePool->isHit()) {
             $users = $this->userRepository->findAll();
-            $this->redis->set('all-users', serialize($users));
+            $cachePool->set($users);
+            $cacheAdapter->save($cachePool);
         } else {
             /** @var User[] $users */
-            $users = unserialize($users);
+            $users = $cachePool->get();
         }
 
         foreach ($users as $user) {
@@ -51,25 +51,38 @@ class GetSpotifyPlays extends Command
             if (401 === $response->getStatusCode()) {
                 \assert(is_string($user->getRefreshToken()));
                 $token = $this->spotifyClient->getTokenFromRefreshToken($user->getRefreshToken())->toArray()['access_token'];
+
                 $user->setToken($token);
+                $cachePool->set($user);
+                $cacheAdapter->save($cachePool);
                 $this->userRepository->save($user, true);
+                $response = $this->spotifyClient->getRecentlyPlayedTracks($token);
             }
-            $response = $this->spotifyClient->getRecentlyPlayedTracks($token);
+
+            $newLastCallToSpotifyApi = null;
             $i = 0;
             foreach ($response->toArray()['items'] as $item) {
                 $trackDto = new TrackDto();
                 $trackDto->fromArray($item);
                 if ($user->getLastCallToSpotifyApi()->getTimestamp() >= $trackDto->getPlayedAt()->getTimestamp()) {
-                    return Command::SUCCESS;
+                    break;
                 }
                 $track = new Track();
                 $track->fromTrackDto($trackDto);
+                $track->setUser($user);
+
                 $this->trackRepository->save($track, true);
                 if (0 === $i) {
-                    $user->setLastCallToSpotifyApi($trackDto->getPlayedAt());
-                    $this->userRepository->save($user, true);
+                    $newLastCallToSpotifyApi = $trackDto->getPlayedAt();
                     ++$i;
                 }
+            }
+
+            if ($newLastCallToSpotifyApi) {
+                $user->setLastCallToSpotifyApi($newLastCallToSpotifyApi);
+                $cachePool->set($user);
+                $cacheAdapter->save($cachePool);
+                $this->userRepository->save($user, true);
             }
         }
 

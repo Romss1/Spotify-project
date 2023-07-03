@@ -2,6 +2,7 @@
 
 namespace App\Worker\Entity;
 
+use App\Common\Entity\User;
 use App\Worker\DTO\TrackDto;
 use App\Worker\Repository\TrackRepository;
 use Doctrine\DBAL\Types\Types;
@@ -26,6 +27,9 @@ class Track
 
     #[ORM\Column(length: 255)]
     private ?string $artist = null;
+
+    #[ORM\ManyToOne(targetEntity: User::class, cascade: ['persist'], inversedBy: 'tracks')]
+    private User $user;
 
     public function getId(): ?int
     {
@@ -78,6 +82,16 @@ class Track
         $this->artist = $artist;
 
         return $this;
+    }
+
+    public function getUser(): User
+    {
+        return $this->user;
+    }
+
+    public function setUser(User $user): void
+    {
+        $this->user = $user;
     }
 
     public function fromTrackDto(TrackDto $trackDto): Track

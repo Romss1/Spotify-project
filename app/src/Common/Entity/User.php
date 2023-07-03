@@ -3,6 +3,8 @@
 namespace App\Common\Entity;
 
 use App\Common\Repository\UserRepository;
+use App\Worker\Entity\Track;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: UserRepository::class)]
@@ -23,8 +25,11 @@ class User
     #[ORM\Column(length: 255)]
     private ?string $scope = null;
 
-    #[ORM\Column(type: 'datetime', nullable: true)]
+    #[ORM\Column(type: 'datetime', options: ['default' => '2000-01-01'])]
     private \DateTime $lastCallToSpotifyApi;
+
+    #[ORM\OneToMany(mappedBy: 'user', targetEntity: Track::class)]
+    private Collection $tracks;
 
     public function getId(): ?int
     {
@@ -75,5 +80,15 @@ class User
     public function setLastCallToSpotifyApi(\DateTime $lastCallToSpotifyApi): void
     {
         $this->lastCallToSpotifyApi = $lastCallToSpotifyApi;
+    }
+
+    public function getTracks(): Collection
+    {
+        return $this->tracks;
+    }
+
+    public function setTracks(Collection $tracks): void
+    {
+        $this->tracks = $tracks;
     }
 }

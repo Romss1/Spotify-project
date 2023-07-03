@@ -3,6 +3,7 @@
 namespace App\Tests\Unit\Common\Entity;
 
 use App\Common\Entity\User;
+use Doctrine\Common\Collections\ArrayCollection;
 use PHPUnit\Framework\TestCase;
 
 class UserTest extends TestCase
@@ -20,12 +21,14 @@ class UserTest extends TestCase
         $user->setRefreshToken($refreshToken);
         $user->setScope($scope);
         $user->setLastCallToSpotifyApi($lastCallToSpotifyApi);
+        $user->setTracks(new ArrayCollection());
 
         $this->assertNull($user->getId());
         $this->assertEquals($token, $user->getToken());
         $this->assertEquals($refreshToken, $user->getRefreshToken());
         $this->assertEquals($scope, $user->getScope());
         $this->assertEquals($lastCallToSpotifyApi, $user->getLastCallToSpotifyApi());
+        $this->assertInstanceOf(ArrayCollection::class, $user->getTracks());
     }
 
     public function testPropertyLengths(): void

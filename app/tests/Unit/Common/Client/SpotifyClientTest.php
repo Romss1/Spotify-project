@@ -2,10 +2,7 @@
 
 namespace App\Tests\Unit\Common\Client;
 
-use App\Common\Client\SpotifyClient;
 use PHPUnit\Framework\TestCase;
-use Symfony\Contracts\HttpClient\HttpClientInterface;
-use Symfony\Contracts\HttpClient\ResponseInterface;
 
 class SpotifyClientTest extends TestCase
 {

@@ -3,7 +3,7 @@
 namespace App\Tests\Unit\Worker\Entity;
 
 use App\Common\Entity\User;
-use App\Worker\DTO\TrackDto;
+use App\Common\Spotify\DTO\TrackDto;
 use App\Worker\Entity\Track;
 use PHPUnit\Framework\TestCase;
 
@@ -34,18 +34,26 @@ class TrackTest extends TestCase
 
     public function testFromTrackDto(): void
     {
-        $trackDto = new TrackDto();
-        $trackDto->setSpotifyId('example_spotify_id');
-        $trackDto->setPlayedAt(new \DateTime('2000-01-01'));
-        $trackDto->setName('example_name');
-        $trackDto->setArtist('example_artist');
+        $data = [
+            'track' => [
+                'id' => 'example_spotify_id',
+                'name' => 'example_name',
+                'artists' => [
+                    [
+                        'name' => 'example_artist',
+                    ],
+                ],
+            ],
+            'played_at' => '2000-01-01',
+        ];
+        $trackDto = TrackDto::fromArray($data);
 
         $track = new Track();
         $track->fromTrackDto($trackDto);
 
-        $this->assertEquals($trackDto->getSpotifyId(), $track->getSpotifyId());
-        $this->assertEquals($trackDto->getPlayedAt(), $track->getPlayedAt());
-        $this->assertEquals($trackDto->getName(), $track->getName());
-        $this->assertEquals($trackDto->getArtist(), $track->getArtist());
+        $this->assertEquals($trackDto->spotifyId, $track->getSpotifyId());
+        $this->assertEquals($trackDto->playedAt, $track->getPlayedAt());
+        $this->assertEquals($trackDto->name, $track->getName());
+        $this->assertEquals($trackDto->artist, $track->getArtist());
     }
 }

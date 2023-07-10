@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Common\Client;
+namespace App\Common\Spotify\Client;
 
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 use Symfony\Contracts\HttpClient\ResponseInterface;

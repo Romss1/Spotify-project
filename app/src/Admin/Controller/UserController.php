@@ -2,9 +2,9 @@
 
 namespace App\Admin\Controller;
 
-use App\Admin\DTO\Spotify\TokenDto;
-use App\Common\Client\SpotifyClient;
 use App\Common\Entity\User;
+use App\Common\Spotify\Client\SpotifyClient;
+use App\Common\Spotify\DTO\TokenDto;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -40,9 +40,12 @@ class UserController extends AbstractController
         );
 
         $user = new User();
-        $user->setToken($token->getAccessToken());
-        $user->setRefreshToken($token->getRefreshToken());
-        $user->setScope($token->getScope());
+        \assert(is_string($token->accessToken));
+        $user->setToken($token->accessToken);
+        \assert(is_string($token->refreshToken));
+        $user->setRefreshToken($token->refreshToken);
+        \assert(is_string($token->scope));
+        $user->setScope($token->scope);
         $user->setLastCallToSpotifyApi(new \DateTime('2000-01-01'));
 
         $em->persist($user);

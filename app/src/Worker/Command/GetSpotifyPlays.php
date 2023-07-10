@@ -2,10 +2,10 @@
 
 namespace App\Worker\Command;
 
-use App\Common\Client\SpotifyClient;
 use App\Common\Entity\User;
 use App\Common\Repository\UserRepository;
-use App\Worker\DTO\TrackDto;
+use App\Common\Spotify\Client\SpotifyClient;
+use App\Common\Spotify\DTO\TrackDto;
 use App\Worker\Entity\Track;
 use App\Worker\Repository\TrackRepository;
 use Symfony\Component\Cache\Adapter\RedisAdapter;
@@ -62,9 +62,8 @@ class GetSpotifyPlays extends Command
             $newLastCallToSpotifyApi = null;
             $i = 0;
             foreach ($response->toArray()['items'] as $item) {
-                $trackDto = new TrackDto();
-                $trackDto->fromArray($item);
-                if ($user->getLastCallToSpotifyApi()->getTimestamp() >= $trackDto->getPlayedAt()->getTimestamp()) {
+                $trackDto = TrackDto::fromArray($item);
+                if ($user->getLastCallToSpotifyApi()->getTimestamp() >= $trackDto->playedAt->getTimestamp()) {
                     break;
                 }
                 $track = new Track();
@@ -73,7 +72,7 @@ class GetSpotifyPlays extends Command
 
                 $this->trackRepository->save($track, true);
                 if (0 === $i) {
-                    $newLastCallToSpotifyApi = $trackDto->getPlayedAt();
+                    $newLastCallToSpotifyApi = $trackDto->playedAt;
                     ++$i;
                 }
             }

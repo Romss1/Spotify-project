@@ -3,7 +3,7 @@
 namespace App\Worker\Entity;
 
 use App\Common\Entity\User;
-use App\Worker\DTO\TrackDto;
+use App\Common\Spotify\DTO\TrackDto;
 use App\Worker\Repository\TrackRepository;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
@@ -96,10 +96,10 @@ class Track
 
     public function fromTrackDto(TrackDto $trackDto): Track
     {
-        $this->setSpotifyId($trackDto->getSpotifyId());
-        $this->setPlayedAt($trackDto->getPlayedAt());
-        $this->setName($trackDto->getName());
-        $this->setArtist($trackDto->getArtist());
+        $this->setSpotifyId($trackDto->spotifyId);
+        $this->setPlayedAt($trackDto->playedAt);
+        $this->setName($trackDto->name);
+        $this->setArtist($trackDto->artist);
 
         return $this;
     }

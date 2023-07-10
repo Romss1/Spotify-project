@@ -1,9 +1,12 @@
 <?php
 
-namespace App\Common\Client;
+namespace App\Common\Spotify\Client;
 
+use App\Common\Spotify\DTO\TokenDto;
+use App\Common\Spotify\DTO\TrackDto;
+use App\Common\Spotify\Exceptions\InvalidRefreshTokenException;
+use App\Common\Spotify\Exceptions\InvalidTokenException;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
-use Symfony\Contracts\HttpClient\ResponseInterface;
 
 class SpotifyClient
 {
@@ -18,9 +21,9 @@ class SpotifyClient
         $this->client = $client;
     }
 
-    public function getToken(string $code): ResponseInterface
+    public function getToken(string $code): TokenDto
     {
-        return $this->client->request('POST', 'https://accounts.spotify.com/api/token', [
+        $response = $this->client->request('POST', 'https://accounts.spotify.com/api/token', [
             'headers' => [
                 'Content-Type' => 'application/x-www-form-urlencoded',
                 'Authorization' => 'Basic '.\base64_encode($this->clientId.':'.$this->clientSecret),
@@ -31,11 +34,17 @@ class SpotifyClient
                 'code' => $code,
             ],
         ]);
+
+        if (400 === $response->getStatusCode()) {
+            throw new InvalidTokenException();
+        }
+
+        return TokenDto::fromArray($response->toArray());
     }
 
-    public function getTokenFromRefreshToken(string $refreshToken): ResponseInterface
+    public function getTokenFromRefreshToken(string $refreshToken): string
     {
-        return $this->client->request('POST', 'https://accounts.spotify.com/api/token', [
+        $response = $this->client->request('POST', 'https://accounts.spotify.com/api/token', [
             'headers' => [
                 'Content-Type' => 'application/x-www-form-urlencoded',
                 'Authorization' => 'Basic '.\base64_encode($this->clientId.':'.$this->clientSecret),
@@ -45,6 +54,12 @@ class SpotifyClient
                 'refresh_token' => $refreshToken,
             ],
         ]);
+
+        if (400 === $response->getStatusCode() || !is_string($response->toArray()['access_token'])) {
+            throw new InvalidRefreshTokenException();
+        }
+
+        return $response->toArray()['access_token'];
     }
 
     public function getUserAuthorizationUrl(): ?string
@@ -69,7 +84,7 @@ class SpotifyClient
         return null;
     }
 
-    public function getRecentlyPlayedTracks(string $token): ResponseInterface
+    public function getRecentlyPlayedTracks(string $token): TrackDto
     {
         $response = $this->client->request('GET', 'https://api.spotify.com/v1/me/player/recently-played', [
             'auth_bearer' => $token,
@@ -78,6 +93,10 @@ class SpotifyClient
                 ],
         ]);
 
-        return $response;
+        if (401 === $response->getStatusCode()) {
+            throw new InvalidTokenException();
+        }
+
+        return TrackDto::fromArray($response->toArray());
     }
 }

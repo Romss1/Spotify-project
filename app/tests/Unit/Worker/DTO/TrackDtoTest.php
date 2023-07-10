@@ -2,7 +2,7 @@
 
 namespace App\Tests\Unit\Worker\DTO;
 
-use App\Worker\DTO\TrackDto;
+use App\Common\Spotify\DTO\TrackDto;
 use PHPUnit\Framework\TestCase;
 
 class TrackDtoTest extends TestCase
@@ -22,12 +22,11 @@ class TrackDtoTest extends TestCase
             'played_at' => '2000-01-01',
         ];
 
-        $TrackDto = new TrackDto();
-        $TrackDto->fromArray($data);
+        $trackDto = TrackDto::fromArray($data);
 
-        $this->assertEquals($data['track']['id'], $TrackDto->getSpotifyId());
-        $this->assertEquals(new \DateTime($data['played_at']), $TrackDto->getPlayedAt());
-        $this->assertEquals($data['track']['name'], $TrackDto->getName());
-        $this->assertEquals($data['track']['artists'][0]['name'], $TrackDto->getArtist());
+        $this->assertEquals($data['track']['id'], $trackDto->spotifyId);
+        $this->assertEquals(new \DateTime($data['played_at']), $trackDto->playedAt);
+        $this->assertEquals($data['track']['name'], $trackDto->name);
+        $this->assertEquals($data['track']['artists'][0]['name'], $trackDto->artist);
     }
 }

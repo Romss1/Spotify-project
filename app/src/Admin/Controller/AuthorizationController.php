@@ -3,7 +3,7 @@
 namespace App\Admin\Controller;
 
 use App\Admin\Form\UserType;
-use App\Common\Client\SpotifyClient;
+use App\Common\Spotify\Client\SpotifyClient;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;

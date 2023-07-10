@@ -2,12 +2,15 @@
 
 namespace App\Worker\Command;
 
-use App\Common\Client\SpotifyClient;
 use App\Common\Entity\User;
 use App\Common\Repository\UserRepository;
-use App\Worker\DTO\TrackDto;
+use App\Common\Spotify\Client\SpotifyClient;
+use App\Common\Spotify\DTO\TrackDto;
+use App\Common\Spotify\Exceptions\InvalidRefreshTokenException;
+use App\Common\Spotify\Exceptions\InvalidTokenException;
 use App\Worker\Entity\Track;
 use App\Worker\Repository\TrackRepository;
+use Psr\Log\LoggerInterface;
 use Symfony\Component\Cache\Adapter\RedisAdapter;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
@@ -20,13 +23,15 @@ class GetSpotifyPlays extends Command
     private SpotifyClient $spotifyClient;
     private UserRepository $userRepository;
     private TrackRepository $trackRepository;
+    private LoggerInterface $logger;
 
-    public function __construct(SpotifyClient $spotifyClient, UserRepository $userRepository, TrackRepository $trackRepository)
+    public function __construct(SpotifyClient $spotifyClient, UserRepository $userRepository, TrackRepository $trackRepository, LoggerInterface $logger)
     {
         parent::__construct();
         $this->spotifyClient = $spotifyClient;
         $this->userRepository = $userRepository;
         $this->trackRepository = $trackRepository;
+        $this->logger = $logger;
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
@@ -46,25 +51,32 @@ class GetSpotifyPlays extends Command
         foreach ($users as $user) {
             $token = $user->getToken();
             \assert(is_string($token));
-            $response = $this->spotifyClient->getRecentlyPlayedTracks($token);
-
-            if (401 === $response->getStatusCode()) {
+            $tracks = null;
+            try {
+                $tracks = $this->spotifyClient->getRecentlyPlayedTracks($token);
+            } catch (InvalidTokenException $e) {
                 \assert(is_string($user->getRefreshToken()));
-                $token = $this->spotifyClient->getTokenFromRefreshToken($user->getRefreshToken())->toArray()['access_token'];
+                try {
+                    $token = $this->spotifyClient->getTokenFromRefreshToken($user->getRefreshToken());
+                    $user->setToken($token);
+                    $cachePool->set($user);
+                    $cacheAdapter->save($cachePool);
+                    $this->userRepository->save($user, true);
+                    $tracks = $this->spotifyClient->getRecentlyPlayedTracks($token);
+                } catch (InvalidRefreshTokenException $e) {
+                    $this->logger->error('Invalid refresh token for user id '.$user->getId());
+                }
+            }
 
-                $user->setToken($token);
-                $cachePool->set($user);
-                $cacheAdapter->save($cachePool);
-                $this->userRepository->save($user, true);
-                $response = $this->spotifyClient->getRecentlyPlayedTracks($token);
+            if (null === $tracks) {
+                continue;
             }
 
             $newLastCallToSpotifyApi = null;
             $i = 0;
-            foreach ($response->toArray()['items'] as $item) {
-                $trackDto = new TrackDto();
-                $trackDto->fromArray($item);
-                if ($user->getLastCallToSpotifyApi()->getTimestamp() >= $trackDto->getPlayedAt()->getTimestamp()) {
+            foreach ($tracks as $item) {
+                $trackDto = TrackDto::fromArray($item);
+                if ($user->getLastCallToSpotifyApi()->getTimestamp() >= $trackDto->playedAt->getTimestamp()) {
                     break;
                 }
                 $track = new Track();
@@ -73,12 +85,12 @@ class GetSpotifyPlays extends Command
 
                 $this->trackRepository->save($track, true);
                 if (0 === $i) {
-                    $newLastCallToSpotifyApi = $trackDto->getPlayedAt();
+                    $newLastCallToSpotifyApi = $trackDto->playedAt;
                     ++$i;
                 }
             }
 
-            if ($newLastCallToSpotifyApi) {
+            if (!is_null($newLastCallToSpotifyApi)) {
                 $user->setLastCallToSpotifyApi($newLastCallToSpotifyApi);
                 $cachePool->set($user);
                 $cacheAdapter->save($cachePool);

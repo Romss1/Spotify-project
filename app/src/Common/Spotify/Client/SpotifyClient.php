@@ -3,8 +3,9 @@
 namespace App\Common\Spotify\Client;
 
 use App\Common\Spotify\DTO\TokenDto;
+use App\Common\Spotify\DTO\TrackDto;
+use App\Common\Spotify\Exception\UnauthorizedException;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
-use Symfony\Contracts\HttpClient\ResponseInterface;
 
 class SpotifyClient
 {
@@ -84,7 +85,10 @@ class SpotifyClient
         return null;
     }
 
-    public function getRecentlyPlayedTracks(string $token): ResponseInterface
+    /**
+     * @return array<TrackDTO>
+     */
+    public function getRecentlyPlayedTracks(string $token): array
     {
         $response = $this->client->request('GET', self::RECENTLY_PLAYED_URI, [
             'auth_bearer' => $token,
@@ -93,6 +97,10 @@ class SpotifyClient
                 ],
         ]);
 
-        return $response;
+        if (401 === $response->getStatusCode()) {
+            throw new UnauthorizedException('Not authorized to request recently-played to spotify', 401);
+        }
+
+        return array_map(fn ($item): TrackDto => TrackDto::fromArray($item), $response->toArray()['items']);
     }
 }

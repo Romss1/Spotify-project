@@ -5,7 +5,7 @@ namespace App\Worker\Command;
 use App\Common\Entity\User;
 use App\Common\Repository\UserRepository;
 use App\Common\Spotify\Client\SpotifyClient;
-use App\Common\Spotify\DTO\TrackDto;
+use App\Common\Spotify\Exception\UnauthorizedException;
 use App\Worker\Entity\Track;
 use App\Worker\Repository\TrackRepository;
 use Symfony\Component\Cache\Adapter\RedisAdapter;
@@ -46,9 +46,9 @@ class GetSpotifyPlays extends Command
         foreach ($users as $user) {
             $token = $user->getToken();
             \assert(is_string($token));
-            $response = $this->spotifyClient->getRecentlyPlayedTracks($token);
-
-            if (401 === $response->getStatusCode()) {
+            try {
+                $trackDTOs = $this->spotifyClient->getRecentlyPlayedTracks($token);
+            } catch (UnauthorizedException) {
                 \assert(is_string($user->getRefreshToken()));
                 $token = $this->spotifyClient->getTokenFromRefreshToken($user->getRefreshToken())->accessToken;
 
@@ -57,23 +57,22 @@ class GetSpotifyPlays extends Command
                 $cachePool->set($user);
                 $cacheAdapter->save($cachePool);
                 $this->userRepository->save($user, true);
-                $response = $this->spotifyClient->getRecentlyPlayedTracks($token);
+                $trackDTOs = $this->spotifyClient->getRecentlyPlayedTracks($token);
             }
 
             $newLastCallToSpotifyApi = null;
             $i = 0;
-            foreach ($response->toArray()['items'] as $item) {
-                $trackDto = TrackDto::fromArray($item);
-                if ($user->getLastCallToSpotifyApi()->getTimestamp() >= $trackDto->playedAt->getTimestamp()) {
+            foreach ($trackDTOs as $trackDTO) {
+                if ($user->getLastCallToSpotifyApi()->getTimestamp() >= $trackDTO->playedAt->getTimestamp()) {
                     break;
                 }
                 $track = new Track();
-                $track->fromTrackDto($trackDto);
+                $track->fromTrackDto($trackDTO);
                 $track->setUser($user);
 
                 $this->trackRepository->save($track, true);
                 if (0 === $i) {
-                    $newLastCallToSpotifyApi = $trackDto->playedAt;
+                    $newLastCallToSpotifyApi = $trackDTO->playedAt;
                     ++$i;
                 }
             }

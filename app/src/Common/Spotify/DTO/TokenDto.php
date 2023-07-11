@@ -16,12 +16,14 @@ class TokenDto
     /**
      * @param array<mixed> $data
      */
-    public static function fromArray(array $data): TokenDto
+    public static function fromArray(array $data, string $refreshToken = null): TokenDto
     {
+        if (!$refreshToken) {
+            $refreshToken = is_string($data['refresh_token']) ? $data['refresh_token'] : null;
+        }
         $accessToken = is_string($data['access_token']) ? $data['access_token'] : null;
         $type = is_string($data['token_type']) ? $data['token_type'] : null;
         $expiredIn = is_int($data['expires_in']) ? $data['expires_in'] : null;
-        $refreshToken = is_string($data['refresh_token']) ? $data['refresh_token'] : null;
         $scope = is_string($data['scope']) ? $data['scope'] : null;
 
         return new self(

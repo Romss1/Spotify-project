@@ -7,6 +7,16 @@ use Symfony\Contracts\HttpClient\ResponseInterface;
 
 class SpotifyClient
 {
+    final public const TOKEN_URI = 'https://accounts.spotify.com/api/token';
+    final public const AUTHORIZE_URI = 'https://accounts.spotify.com/authorize?';
+    final public const RECENTLY_PLAYED_URI = 'https://api.spotify.com/v1/me/player/recently-played';
+    final public const CONTENT_TYPE = 'application/x-www-form-urlencoded';
+    final public const GRAND_TYPE_AUTHORIZATION = 'authorization_code';
+    final public const GRAND_TYPE_REFRESH_TOKEN = 'refresh_token';
+    final public const RESPONSE_TYPE = 'code';
+    final public const SCOPE = 'user-read-private user-read-email user-read-recently-played';
+    final public const SHOW_DIALOG = 'false';
+    final public const QUERY_LIMIT = 50;
     private HttpClientInterface $client;
 
     public function __construct(
@@ -20,13 +30,13 @@ class SpotifyClient
 
     public function getToken(string $code): ResponseInterface
     {
-        return $this->client->request('POST', 'https://accounts.spotify.com/api/token', [
+        return $this->client->request('POST', self::TOKEN_URI, [
             'headers' => [
-                'Content-Type' => 'application/x-www-form-urlencoded',
+                'Content-Type' => self::CONTENT_TYPE,
                 'Authorization' => 'Basic '.\base64_encode($this->clientId.':'.$this->clientSecret),
             ],
             'body' => [
-                'grant_type' => 'authorization_code',
+                'grant_type' => self::GRAND_TYPE_AUTHORIZATION,
                 'redirect_uri' => $this->redirectUri,
                 'code' => $code,
             ],
@@ -35,13 +45,13 @@ class SpotifyClient
 
     public function getTokenFromRefreshToken(string $refreshToken): ResponseInterface
     {
-        return $this->client->request('POST', 'https://accounts.spotify.com/api/token', [
+        return $this->client->request('POST', self::TOKEN_URI, [
             'headers' => [
-                'Content-Type' => 'application/x-www-form-urlencoded',
+                'Content-Type' => self::CONTENT_TYPE,
                 'Authorization' => 'Basic '.\base64_encode($this->clientId.':'.$this->clientSecret),
             ],
             'body' => [
-                'grant_type' => 'refresh_token',
+                'grant_type' => self::GRAND_TYPE_REFRESH_TOKEN,
                 'refresh_token' => $refreshToken,
             ],
         ]);
@@ -51,14 +61,14 @@ class SpotifyClient
     {
         $params = [
             'client_id' => $this->clientId,
-            'response_type' => 'code',
+            'response_type' => self::RESPONSE_TYPE,
             'redirect_uri' => $this->redirectUri,
-            'scope' => 'user-read-private user-read-email user-read-recently-played',
-            'show_dialog' => 'false',
+            'scope' => self::SCOPE,
+            'show_dialog' => self::SHOW_DIALOG,
             'state' => uniqid(),
         ];
 
-        $url = 'https://accounts.spotify.com/authorize?'.http_build_query($params);
+        $url = self::AUTHORIZE_URI.http_build_query($params);
 
         $response = $this->client->request('GET', $url);
 
@@ -71,10 +81,10 @@ class SpotifyClient
 
     public function getRecentlyPlayedTracks(string $token): ResponseInterface
     {
-        $response = $this->client->request('GET', 'https://api.spotify.com/v1/me/player/recently-played', [
+        $response = $this->client->request('GET', self::RECENTLY_PLAYED_URI, [
             'auth_bearer' => $token,
             'query' => [
-                'limit' => 50,
+                'limit' => self::QUERY_LIMIT,
                 ],
         ]);
 

@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Tests\Unit\Common\Client;
+namespace App\Tests\Unit\Common\Spotify\Client;
 
 use PHPUnit\Framework\TestCase;
 

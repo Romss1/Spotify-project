@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Tests\Unit\Worker\DTO;
+namespace App\Tests\Unit\Common\Spotify\DTO;
 
 use App\Common\Spotify\DTO\TrackDto;
 use PHPUnit\Framework\TestCase;

@@ -4,7 +4,6 @@ namespace App\Admin\Controller;
 
 use App\Common\Entity\User;
 use App\Common\Spotify\Client\SpotifyClient;
-use App\Common\Spotify\DTO\TokenDto;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -29,15 +28,7 @@ class UserController extends AbstractController
         }
 
         \assert(is_string($code));
-        $response = $client->getToken($code)->toArray();
-
-        $token = new TokenDto(
-            $response['access_token'],
-            $response['token_type'],
-            $response['expires_in'],
-            $response['refresh_token'],
-            $response['scope']
-        );
+        $token = $client->getToken($code);
 
         $user = new User();
         \assert(is_string($token->accessToken));

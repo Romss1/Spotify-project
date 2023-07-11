@@ -7,33 +7,48 @@ use PHPUnit\Framework\TestCase;
 
 class TokenTest extends TestCase
 {
-    public function testGetAccessToken(): void
+    public function testFromArrayWithoutRefreshToken(): void
     {
-        $token = new TokenDto('access_token', 'type', 3600, 'refresh_token', 'scope');
-        $this->assertEquals('access_token', $token->accessToken);
+        // Given
+        $data = [
+            'access_token' => 'tokenTest',
+            'token_type' => 'typeTest',
+            'expires_in' => 999999999,
+            'scope' => 'scopeTest',
+            'refresh_token' => 'refreshToken',
+        ];
+
+        // When
+        $tokenDTO = TokenDto::fromArray($data);
+
+        // Then
+        $this->assertEquals($data['access_token'], $tokenDTO->accessToken);
+        $this->assertEquals($data['token_type'], $tokenDTO->type);
+        $this->assertEquals($data['expires_in'], $tokenDTO->expiredIn);
+        $this->assertEquals($data['scope'], $tokenDTO->scope);
+        $this->assertEquals($data['refresh_token'], $tokenDTO->refreshToken);
     }
 
-    public function testGetType(): void
+    public function testFromArrayWithRefreshToken(): void
     {
-        $token = new TokenDto('access_token', 'type', 3600, 'refresh_token', 'scope');
-        $this->assertEquals('type', $token->type);
-    }
+        // Given
+        $data = [
+            'access_token' => 'tokenTest',
+            'token_type' => 'typeTest',
+            'expires_in' => 999999999,
+            'scope' => 'scopeTest',
+        ];
 
-    public function testGetExpiredIn(): void
-    {
-        $token = new TokenDto('access_token', 'type', 3600, 'refresh_token', 'scope');
-        $this->assertEquals(3600, $token->expiredIn);
-    }
+        $refreshToken = 'refreshTokenTest';
 
-    public function testGetRefreshToken(): void
-    {
-        $token = new TokenDto('access_token', 'type', 3600, 'refresh_token', 'scope');
-        $this->assertEquals('refresh_token', $token->refreshToken);
-    }
+        // When
+        $tokenDTO = TokenDto::fromArray($data, $refreshToken);
 
-    public function testGetScope(): void
-    {
-        $token = new TokenDto('access_token', 'type', 3600, 'refresh_token', 'scope');
-        $this->assertEquals('scope', $token->scope);
+        // Then
+        $this->assertEquals($data['access_token'], $tokenDTO->accessToken);
+        $this->assertEquals($data['token_type'], $tokenDTO->type);
+        $this->assertEquals($data['expires_in'], $tokenDTO->expiredIn);
+        $this->assertEquals($data['scope'], $tokenDTO->scope);
+        $this->assertEquals($refreshToken, $tokenDTO->refreshToken);
     }
 }

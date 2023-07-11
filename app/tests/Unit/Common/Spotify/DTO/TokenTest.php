@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Tests\Unit\Admin\DTO\Spotify;
+namespace App\Tests\Unit\Common\Spotify\DTO;
 
 use App\Common\Spotify\DTO\TokenDto;
 use PHPUnit\Framework\TestCase;

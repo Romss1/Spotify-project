@@ -46,9 +46,9 @@ class SpotifyClient
         return TokenDTO::fromArray($response->toArray());
     }
 
-    public function getTokenFromRefreshToken(string $refreshToken): ResponseInterface
+    public function getTokenFromRefreshToken(string $refreshToken): TokenDto
     {
-        return $this->client->request('POST', self::TOKEN_URI, [
+        $response = $this->client->request('POST', self::TOKEN_URI, [
             'headers' => [
                 'Content-Type' => self::CONTENT_TYPE,
                 'Authorization' => 'Basic '.\base64_encode($this->clientId.':'.$this->clientSecret),
@@ -58,6 +58,8 @@ class SpotifyClient
                 'refresh_token' => $refreshToken,
             ],
         ]);
+
+        return TokenDto::fromArray($response->toArray(), $refreshToken);
     }
 
     public function getUserAuthorizationUrl(): ?string

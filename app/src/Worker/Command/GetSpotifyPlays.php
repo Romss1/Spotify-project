@@ -50,8 +50,9 @@ class GetSpotifyPlays extends Command
 
             if (401 === $response->getStatusCode()) {
                 \assert(is_string($user->getRefreshToken()));
-                $token = $this->spotifyClient->getTokenFromRefreshToken($user->getRefreshToken())->toArray()['access_token'];
+                $token = $this->spotifyClient->getTokenFromRefreshToken($user->getRefreshToken())->accessToken;
 
+                \assert(is_string($token));
                 $user->setToken($token);
                 $cachePool->set($user);
                 $cacheAdapter->save($cachePool);

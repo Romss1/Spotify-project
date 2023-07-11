@@ -2,6 +2,7 @@
 
 namespace App\Common\Spotify\Client;
 
+use App\Common\Spotify\DTO\TokenDto;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 use Symfony\Contracts\HttpClient\ResponseInterface;
 
@@ -28,9 +29,9 @@ class SpotifyClient
         $this->client = $client;
     }
 
-    public function getToken(string $code): ResponseInterface
+    public function getToken(string $code): TokenDto
     {
-        return $this->client->request('POST', self::TOKEN_URI, [
+        $response = $this->client->request('POST', self::TOKEN_URI, [
             'headers' => [
                 'Content-Type' => self::CONTENT_TYPE,
                 'Authorization' => 'Basic '.\base64_encode($this->clientId.':'.$this->clientSecret),
@@ -41,6 +42,8 @@ class SpotifyClient
                 'code' => $code,
             ],
         ]);
+
+        return TokenDTO::fromArray($response->toArray());
     }
 
     public function getTokenFromRefreshToken(string $refreshToken): ResponseInterface

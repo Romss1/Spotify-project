@@ -5,7 +5,7 @@ namespace App\Tests\Unit\Common\Spotify\DTO;
 use App\Common\Spotify\DTO\TrackDto;
 use PHPUnit\Framework\TestCase;
 
-class TrackDtoTest extends TestCase
+final class TrackDtoTest extends TestCase
 {
     public function testFromArray(): void
     {

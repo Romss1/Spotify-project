@@ -5,7 +5,7 @@ namespace App\Tests\Unit\Common\Spotify\DTO;
 use App\Common\Spotify\DTO\TokenDto;
 use PHPUnit\Framework\TestCase;
 
-class TokenTest extends TestCase
+final class TokenTest extends TestCase
 {
     public function testFromArrayWithoutRefreshToken(): void
     {

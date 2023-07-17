@@ -6,7 +6,7 @@ use App\Common\Entity\User;
 use Doctrine\Common\Collections\ArrayCollection;
 use PHPUnit\Framework\TestCase;
 
-class UserTest extends TestCase
+final class UserTest extends TestCase
 {
     public function testGettersAndSetters(): void
     {

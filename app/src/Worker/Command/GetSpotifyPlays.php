@@ -2,13 +2,13 @@
 
 namespace App\Worker\Command;
 
-use App\Common\Entity\User;
+use App\Common\Redis\RedisCache;
+use App\Common\Redis\UserRetriever;
 use App\Common\Repository\UserRepository;
 use App\Common\Spotify\Client\SpotifyClient;
 use App\Common\Spotify\Exception\UnauthorizedException;
 use App\Worker\Entity\Track;
 use App\Worker\Repository\TrackRepository;
-use Symfony\Component\Cache\Adapter\RedisAdapter;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
@@ -17,33 +17,30 @@ use Symfony\Component\Console\Output\OutputInterface;
 #[AsCommand(name: 'get-spotify-plays')]
 class GetSpotifyPlays extends Command
 {
+    private const USERS_KEY = 'users';
     private SpotifyClient $spotifyClient;
     private UserRepository $userRepository;
     private TrackRepository $trackRepository;
+    private UserRetriever $userRetriever;
+    private RedisCache $redisCache;
 
-    public function __construct(SpotifyClient $spotifyClient, UserRepository $userRepository, TrackRepository $trackRepository)
+    public function __construct(SpotifyClient $spotifyClient, UserRepository $userRepository, TrackRepository $trackRepository, UserRetriever $userRetriever, RedisCache $redisCache)
     {
         parent::__construct();
         $this->spotifyClient = $spotifyClient;
         $this->userRepository = $userRepository;
         $this->trackRepository = $trackRepository;
+        $this->userRetriever = $userRetriever;
+        $this->redisCache = $redisCache;
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        $redisClient = RedisAdapter::createConnection('redis://redis');
-        $cacheAdapter = new RedisAdapter($redisClient);
-        $cachePool = $cacheAdapter->getItem('users');
-        if (!$cachePool->isHit()) {
-            $users = $this->userRepository->findAll();
-            $cachePool->set($users);
-            $cacheAdapter->save($cachePool);
-        } else {
-            /** @var User[] $users */
-            $users = $cachePool->get();
-        }
+        // TODO userRetrieve doit return une collection de User
+        $users = ($this->userRetriever)();
 
-        foreach ($users as $user) {
+        // TODO update pas le user mais en créé un autre
+        foreach ([$users] as $user) {
             $token = $user->getToken();
             \assert(is_string($token));
             try {
@@ -54,8 +51,7 @@ class GetSpotifyPlays extends Command
 
                 \assert(is_string($token));
                 $user->setToken($token);
-                $cachePool->set($user);
-                $cacheAdapter->save($cachePool);
+                $this->redisCache->saveItem(self::USERS_KEY, $user);
                 $this->userRepository->save($user, true);
                 $trackDTOs = $this->spotifyClient->getRecentlyPlayedTracks($token);
             }
@@ -79,8 +75,7 @@ class GetSpotifyPlays extends Command
 
             if ($newLastCallToSpotifyApi) {
                 $user->setLastCallToSpotifyApi($newLastCallToSpotifyApi);
-                $cachePool->set($user);
-                $cacheAdapter->save($cachePool);
+                $this->redisCache->saveItem(self::USERS_KEY, $user);
                 $this->userRepository->save($user, true);
             }
         }

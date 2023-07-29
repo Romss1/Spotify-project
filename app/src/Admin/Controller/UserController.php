@@ -20,7 +20,7 @@ class UserController extends AbstractController
         $hasSpotifyClient = $userRepository->spotifyClientExists($client->getClientId());
 
         if ($hasSpotifyClient) {
-            return $this->render('authorization_success.html.twig');
+            return $this->render('authorization_requested_again.html.twig');
         }
 
         $code = \array_key_exists('code', $request->query->all()) ? $request->query->get('code') : null;

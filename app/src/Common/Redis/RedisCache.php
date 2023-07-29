@@ -2,23 +2,28 @@
 
 namespace App\Common\Redis;
 
+use Predis\Client;
 use Predis\ClientInterface;
 use Symfony\Component\Cache\Adapter\RedisAdapter;
 
 class RedisCache implements RedisInterface
 {
-    private ClientInterface $redisClient;
     private RedisAdapter $cacheAdapter;
 
     public function __construct(private readonly string $redisUrl)
     {
-        $this->redisClient = RedisAdapter::createConnection($this->redisUrl);
-        $this->cacheAdapter = new RedisAdapter($this->redisClient);
+        $redisClient = RedisAdapter::createConnection($this->redisUrl);
+        $this->cacheAdapter = new RedisAdapter($redisClient);
     }
 
     public function getRedisClient(): ClientInterface
     {
-        return $this->redisClient;
+        $redis = RedisAdapter::createConnection($this->redisUrl);
+        if (!$redis instanceof ClientInterface) {
+            $redis = new Client();
+        }
+
+        return $redis;
     }
 
     public function getCacheAdapter(): RedisAdapter

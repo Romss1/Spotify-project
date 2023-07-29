@@ -16,6 +16,8 @@ class User
     #[ORM\Column]
     private ?int $id = null;
 
+    #[ORM\Column(length: 255, options: ['default' => null])]
+    private ?string $spotifyClientId;
     #[ORM\Column(length: 255)]
     private ?string $token = null;
 
@@ -34,6 +36,16 @@ class User
     public function getId(): ?int
     {
         return $this->id;
+    }
+
+    public function getSpotifyClientId(): ?string
+    {
+        return $this->spotifyClientId;
+    }
+
+    public function setSpotifyClientId(?string $spotifyClientId): void
+    {
+        $this->spotifyClientId = $spotifyClientId;
     }
 
     public function getToken(): ?string

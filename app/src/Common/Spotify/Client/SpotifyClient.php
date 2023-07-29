@@ -103,4 +103,9 @@ class SpotifyClient
 
         return array_map(fn ($item): TrackDto => TrackDto::fromArray($item), $response->toArray()['items']);
     }
+
+    public function getClientId(): string
+    {
+        return $this->clientId;
+    }
 }

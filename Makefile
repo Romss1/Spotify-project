@@ -64,6 +64,10 @@ migration:
 migrate:
 	$(exec) -c "php bin/console doctrine:migrations:migrate"
 .PHONY: migrate
+
+redis-bash:
+	docker exec -it redis_spotify redis-cli
+.PHONY: redis-bash
 #-----------------------------------------------------------------------------------------------------------------------
 # Variables
 #-----------------------------------------------------------------------------------------------------------------------

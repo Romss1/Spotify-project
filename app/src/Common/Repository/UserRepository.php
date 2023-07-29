@@ -39,7 +39,7 @@ class UserRepository extends ServiceEntityRepository
         }
     }
 
-    public function spotifyClientExists($value): bool
+    public function spotifyClientExists(string $value): bool
     {
         $response = $this->createQueryBuilder('u')
             ->andWhere('u.spotifyClientId = :val')

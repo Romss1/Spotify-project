@@ -3,6 +3,7 @@
 namespace App\Admin\Controller;
 
 use App\Common\Entity\User;
+use App\Common\Redis\RedisCache;
 use App\Common\Repository\UserRepository;
 use App\Common\Spotify\Client\SpotifyClient;
 use Doctrine\ORM\EntityManagerInterface;
@@ -15,7 +16,7 @@ use Symfony\Component\Routing\Annotation\Route;
 class UserController extends AbstractController
 {
     #[Route('/callback')]
-    public function __invoke(Request $request, SpotifyClient $client, LoggerInterface $logger, EntityManagerInterface $em, UserRepository $userRepository): Response
+    public function __invoke(Request $request, SpotifyClient $client, LoggerInterface $logger, EntityManagerInterface $em, UserRepository $userRepository, RedisCache $redisCache): Response
     {
         $hasSpotifyClient = $userRepository->spotifyClientExists($client->getClientId());
 
@@ -45,9 +46,13 @@ class UserController extends AbstractController
         \assert(is_string($token->scope));
         $user->setScope($token->scope);
         $user->setLastCallToSpotifyApi(new \DateTime('2000-01-01'));
+        $user->setSpotifyClientId($client->getClientId());
 
         $em->persist($user);
         $em->flush();
+
+        $redis = $redisCache->getRedisClient();
+        $redis->set('users:'.$user->getId(), \serialize($user));
 
         return $this->render('authorization_success.html.twig');
     }

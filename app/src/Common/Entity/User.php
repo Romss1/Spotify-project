@@ -14,18 +14,18 @@ class User
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
-    private ?int $id = null;
-
-    #[ORM\Column(length: 255, options: ['default' => null])]
-    private ?string $spotifyClientId;
-    #[ORM\Column(length: 255)]
-    private ?string $token = null;
+    private int $id;
 
     #[ORM\Column(length: 255)]
-    private ?string $refreshToken = null;
+    private string $spotifyClientId;
+    #[ORM\Column(length: 255)]
+    private string $token;
 
     #[ORM\Column(length: 255)]
-    private ?string $scope = null;
+    private string $refreshToken;
+
+    #[ORM\Column(length: 255)]
+    private string $scope;
 
     #[ORM\Column(type: 'datetime', options: ['default' => '2000-01-01'])]
     private \DateTime $lastCallToSpotifyApi;
@@ -33,22 +33,22 @@ class User
     #[ORM\OneToMany(mappedBy: 'user', targetEntity: Track::class)]
     private Collection $tracks;
 
-    public function getId(): ?int
+    public function getId(): int
     {
         return $this->id;
     }
 
-    public function getSpotifyClientId(): ?string
+    public function getSpotifyClientId(): string
     {
         return $this->spotifyClientId;
     }
 
-    public function setSpotifyClientId(?string $spotifyClientId): void
+    public function setSpotifyClientId(string $spotifyClientId): void
     {
         $this->spotifyClientId = $spotifyClientId;
     }
 
-    public function getToken(): ?string
+    public function getToken(): string
     {
         return $this->token;
     }
@@ -60,7 +60,7 @@ class User
         return $this;
     }
 
-    public function getRefreshToken(): ?string
+    public function getRefreshToken(): string
     {
         return $this->refreshToken;
     }
@@ -72,7 +72,7 @@ class User
         return $this;
     }
 
-    public function getScope(): ?string
+    public function getScope(): string
     {
         return $this->scope;
     }

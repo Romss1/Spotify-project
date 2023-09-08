@@ -2,13 +2,13 @@
 
 namespace App\Worker\Command;
 
-use App\Common\Redis\RedisCache;
-use App\Common\Redis\UserRetriever;
+use App\Common\Entity\User;
 use App\Common\Repository\UserRepository;
 use App\Common\Spotify\Client\SpotifyClient;
 use App\Common\Spotify\Exception\UnauthorizedException;
 use App\Worker\Entity\Track;
 use App\Worker\Repository\TrackRepository;
+use Symfony\Component\Cache\Adapter\RedisAdapter;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
@@ -17,51 +17,54 @@ use Symfony\Component\Console\Output\OutputInterface;
 #[AsCommand(name: 'get-spotify-plays')]
 class GetSpotifyPlays extends Command
 {
-    private const USERS_KEY = 'users';
+//    private const USERS_KEY = 'users';
     private SpotifyClient $spotifyClient;
     private UserRepository $userRepository;
     private TrackRepository $trackRepository;
-    private UserRetriever $userRetriever;
-    private RedisCache $redisCache;
 
-    public function __construct(SpotifyClient $spotifyClient, UserRepository $userRepository, TrackRepository $trackRepository, UserRetriever $userRetriever, RedisCache $redisCache)
+    public function __construct(SpotifyClient $spotifyClient, UserRepository $userRepository, TrackRepository $trackRepository)
     {
         parent::__construct();
         $this->spotifyClient = $spotifyClient;
         $this->userRepository = $userRepository;
         $this->trackRepository = $trackRepository;
-        $this->userRetriever = $userRetriever;
-        $this->redisCache = $redisCache;
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        // TODO userRetrieve doit return une collection de User
-        $users = ($this->userRetriever)();
-
-        // TODO update pas le user mais en créé un autre
-        foreach ([$users] as $user) {
-            $token = $user->getToken();
+        // Redis
+        $redisClient = RedisAdapter::createConnection('redis://redis');
+        $cache = new RedisAdapter($redisClient);
+        $keys = $redisClient->keys('user-*');
+        foreach ($keys as $key) {
+            $spotifyClientId = explode('-', $key)[1];
+            $user = $this->userRepository->findOneBy(['spotifyClientId' => $spotifyClientId]);
+            $token = $cache->getItem($key)->get();
             \assert(is_string($token));
             try {
                 $trackDTOs = $this->spotifyClient->getRecentlyPlayedTracks($token);
             } catch (UnauthorizedException) {
+                \assert($user instanceof User);
                 \assert(is_string($user->getRefreshToken()));
                 $token = $this->spotifyClient->getTokenFromRefreshToken($user->getRefreshToken())->accessToken;
 
                 \assert(is_string($token));
-                $user->setToken($token);
-                $this->redisCache->saveItem(self::USERS_KEY, $user);
-                $this->userRepository->save($user, true);
+                $item = $cache->getItem($key);
+                $item->set($token);
+                $cache->save($item);
+
                 $trackDTOs = $this->spotifyClient->getRecentlyPlayedTracks($token);
             }
 
-            $newLastCallToSpotifyApi = null;
             $i = 0;
+            $newLastCallToSpotifyApi = null;
             foreach ($trackDTOs as $trackDTO) {
-                if ($user->getLastCallToSpotifyApi()->getTimestamp() >= $trackDTO->playedAt->getTimestamp()) {
+                \assert($user instanceof User);
+                $lastCallToSpotifyApi = $user->getLastCallToSpotifyApi()->getTimestamp();
+                if ($lastCallToSpotifyApi >= $trackDTO->playedAt->getTimestamp()) {
                     break;
                 }
+
                 $track = new Track();
                 $track->fromTrackDto($trackDTO);
                 $track->setUser($user);
@@ -72,12 +75,8 @@ class GetSpotifyPlays extends Command
                     ++$i;
                 }
             }
-
-            if ($newLastCallToSpotifyApi) {
-                $user->setLastCallToSpotifyApi($newLastCallToSpotifyApi);
-                $this->redisCache->saveItem(self::USERS_KEY, $user);
-                $this->userRepository->save($user, true);
-            }
+            $user->setLastCallToSpotifyApi($newLastCallToSpotifyApi);
+            $this->userRepository->save($user, true);
         }
 
         return Command::SUCCESS;

@@ -35,7 +35,14 @@ services:
     Predis\Client:
         arguments:
             - '%env(REDIS_URL)%'
+            - tags: true
 
     App\Common\Redis\RedisCache:
         arguments:
             $redisUrl: '%env(REDIS_URL)%'
+
+    App\Admin\EventSubscriber\UserEventSubscriber:
+        arguments:
+            $entityManager: '@doctrine.orm.entity_manager'
+        tags:
+            - { name: doctrine.event_subscriber }

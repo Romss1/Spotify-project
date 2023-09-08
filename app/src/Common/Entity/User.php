@@ -16,10 +16,8 @@ class User
     #[ORM\Column]
     private int $id;
 
-    #[ORM\Column(length: 255)]
+    #[ORM\Column(length: 255, unique: true)]
     private string $spotifyClientId;
-    #[ORM\Column(length: 255)]
-    private string $token;
 
     #[ORM\Column(length: 255)]
     private string $refreshToken;
@@ -46,18 +44,6 @@ class User
     public function setSpotifyClientId(string $spotifyClientId): void
     {
         $this->spotifyClientId = $spotifyClientId;
-    }
-
-    public function getToken(): string
-    {
-        return $this->token;
-    }
-
-    public function setToken(string $token): static
-    {
-        $this->token = $token;
-
-        return $this;
     }
 
     public function getRefreshToken(): string

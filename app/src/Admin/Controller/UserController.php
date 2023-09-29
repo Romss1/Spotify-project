@@ -4,7 +4,6 @@ namespace App\Admin\Controller;
 
 use App\Admin\Exception\DuplicatedUserException;
 use App\Common\Entity\User;
-use App\Common\Redis\RedisCache;
 use App\Common\Repository\UserRepository;
 use App\Common\Spotify\Client\SpotifyClient;
 use Doctrine\ORM\EntityManagerInterface;
@@ -18,13 +17,13 @@ use Symfony\Component\Routing\Annotation\Route;
 class UserController extends AbstractController
 {
     #[Route('/callback')]
-    public function __invoke(Request $request, SpotifyClient $client, LoggerInterface $logger, EntityManagerInterface $em, UserRepository $userRepository, RedisCache $redisCache): Response
+    public function __invoke(Request $request, SpotifyClient $client, LoggerInterface $logger, EntityManagerInterface $em, UserRepository $userRepository): Response
     {
         $code = \array_key_exists('code', $request->query->all()) ? $request->query->get('code') : null;
         $state = \array_key_exists('state', $request->query->all()) ? $request->query->get('state') : null;
         $error = \array_key_exists('error', $request->query->all()) ? $request->query->get('error') : null;
 
-//       Raise an exception ?
+        //       Raise an exception ?
         if ($error) {
             $logger->error('Unauthorized');
 

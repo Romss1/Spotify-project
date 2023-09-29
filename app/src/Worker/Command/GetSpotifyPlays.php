@@ -6,28 +6,35 @@ use App\Common\Entity\User;
 use App\Common\Repository\UserRepository;
 use App\Common\Spotify\Client\SpotifyClient;
 use App\Common\Spotify\Exception\UnauthorizedException;
-use App\Worker\Entity\Track;
-use App\Worker\Repository\TrackRepository;
+use App\Worker\Message\Track;
 use Symfony\Component\Cache\Adapter\RedisAdapter;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Component\Messenger\MessageBusInterface;
+use Symfony\Component\Serializer\SerializerInterface;
 
 #[AsCommand(name: 'get-spotify-plays')]
 class GetSpotifyPlays extends Command
 {
-//    private const USERS_KEY = 'users';
+    //    private const USERS_KEY = 'users';
     private SpotifyClient $spotifyClient;
     private UserRepository $userRepository;
-    private TrackRepository $trackRepository;
+    private SerializerInterface $serializer;
+    private MessageBusInterface $bus;
 
-    public function __construct(SpotifyClient $spotifyClient, UserRepository $userRepository, TrackRepository $trackRepository)
-    {
+    public function __construct(
+        SpotifyClient $spotifyClient,
+        UserRepository $userRepository,
+        SerializerInterface $serializer,
+        MessageBusInterface $bus
+    ) {
         parent::__construct();
         $this->spotifyClient = $spotifyClient;
         $this->userRepository = $userRepository;
-        $this->trackRepository = $trackRepository;
+        $this->serializer = $serializer;
+        $this->bus = $bus;
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
@@ -64,18 +71,19 @@ class GetSpotifyPlays extends Command
                 if ($lastCallToSpotifyApi >= $trackDTO->playedAt->getTimestamp()) {
                     break;
                 }
+                $trackDTO->setUserId($user->getId());
+                $jsonData = $this->serializer->serialize($trackDTO, 'json');
+                $this->bus->dispatch(new Track($jsonData));
 
-                $track = new Track();
-                $track->fromTrackDto($trackDTO);
-                $track->setUser($user);
-
-                $this->trackRepository->save($track, true);
                 if (0 === $i) {
                     $newLastCallToSpotifyApi = $trackDTO->playedAt;
                     ++$i;
                 }
             }
-            $user->setLastCallToSpotifyApi($newLastCallToSpotifyApi);
+            \assert($user instanceof User);
+            if ($newLastCallToSpotifyApi instanceof \DateTime) {
+                $user->setLastCallToSpotifyApi($newLastCallToSpotifyApi);
+            }
             $this->userRepository->save($user, true);
         }
 

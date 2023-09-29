@@ -68,6 +68,14 @@ migrate:
 redis-bash:
 	docker exec -it redis_spotify redis-cli
 .PHONY: redis-bash
+
+rabbit-bash:
+	docker exec -it rabbit_spotify bash
+.PHONY: rabbit-bash
+
+run-messenger:
+	$(exec) -c "php bin/console messenger:consume async -vv"
+.PHONY: run-messenger
 #-----------------------------------------------------------------------------------------------------------------------
 # Variables
 #-----------------------------------------------------------------------------------------------------------------------

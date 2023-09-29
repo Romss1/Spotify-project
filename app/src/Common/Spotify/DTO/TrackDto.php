@@ -8,8 +8,19 @@ class TrackDto
         public readonly string $spotifyId,
         public readonly \DateTime $playedAt,
         public readonly string $name,
-        public readonly string $artist
+        public readonly string $artist,
+        public int|null $userId
     ) {
+    }
+
+    public function getUserId(): ?int
+    {
+        return $this->userId;
+    }
+
+    public function setUserId(?int $userId): void
+    {
+        $this->userId = $userId;
     }
 
     /**
@@ -32,12 +43,14 @@ class TrackDto
         $playedAt = new \DateTime($data['played_at']);
         $name = $data['track']['name'];
         $artist = $data['track']['artists'][0]['name'];
+        $user = null;
 
         return new self(
             $spotifyId,
             $playedAt,
             $name,
-            $artist
+            $artist,
+            $user
         );
     }
 }

@@ -27,6 +27,7 @@ services:
       context: ./php-fpm
     depends_on:
       - db
+      - rabbitmq
     extra_hosts:
         - host.docker.internal:host-gateway
     volumes:
@@ -66,9 +67,26 @@ services:
       - dev
       - web-proxy
 
+  rabbitmq:
+    container_name: rabbit_spotify
+    image: rabbitmq:3.12.3-management-alpine
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+#    environment:
+#      RABBITMQ_DEFAULT_USER: guest
+#      RABBITMQ_DEFAULT_PASS: guest
+    volumes:
+      - rmq-data:/var/lib/rabbitmq
+    networks:
+      - web-proxy
+      - dev
+
+
 networks:
   dev:
   web-proxy:
 
 volumes:
   db-data:
+  rmq-data:
